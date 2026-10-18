@@ -1,58 +1,45 @@
-**⚠️ This is currently under development, dont use it yet if you're not comfortable with constantly merging new changes**
+# My CloudStream Plugins
 
-# `Cloudstream3 Plugin Repo Template`
+A small [CloudStream](https://github.com/recloudstream/cloudstream) plugin repository.
 
-Template for a [Cloudstream3](https://github.com/recloudstream) plugin repo
+## Plugins
 
-**⚠️ Make sure you check "Include all branches" when using this template**
+| Plugin | Description |
+|---|---|
+| **YouTube** | Search YouTube videos and play them in CloudStream. |
 
- 
-## Getting started with writing your first plugin
+## Install
 
-This template includes 1 example plugin.
+1. Open CloudStream and go to **Settings → Extensions → Add repository**.
+2. Enter any name, and paste this link as the URL:
 
-1. Open the root build.gradle.kts, read the comments and replace all the placeholders
-2. Familiarize yourself with the project structure. Most files are commented
-3. Build or deploy your first plugin using:
-   - Windows: `.\gradlew.bat ExampleProvider:make` or `.\gradlew.bat ExampleProvider:deployWithAdb`
-   - Linux & Mac: `./gradlew ExampleProvider:make` or `./gradlew ExampleProvider:deployWithAdb`
+```
+https://raw.githubusercontent.com/Deathscythe0x1/Extenstions-test/master/repo.json
+```
 
+3. Open the repository and download **YouTube**.
+4. Close CloudStream completely and reopen it. Then use the **Search** tab and select YouTube as a source.
 
-## Granting All Files Access on Newer Android Devices
+**One-tap install on Android:** open <https://deathscythe0x1.github.io/Extenstions-test/> and tap **Add to CloudStream**.
 
-For local plugin testing, you need to grant the app "All Files Access" on newer Android devices (Android 11 and above). Here’s how to do it:
+## Notes
 
-### Using ADB
+- YouTube search relies on free public [Piped](https://github.com/TeamPiped/Piped) servers. The plugin tries several of them in turn, but they sometimes go down, so search may fail for a while. Playback uses CloudStream's built-in YouTube extractor.
+- This is a personal learning project. It is not affiliated with YouTube, Google, or CloudStream.
+- Using YouTube through third-party tools may go against YouTube's terms of service, so use it at your own risk.
 
-* `adb shell appops set --uid PACKAGE_NAME MANAGE_EXTERNAL_STORAGE allow`
-* Replace `PACKAGE_NAME` with the name of the package for the Cloudstream3 version you are using:
-   - debug: `com.lagradost.cloudstream3.prerelease.debug`
-   - prerelease: `com.lagradost.cloudstream3.prerelease`
-   - stable: `com.lagradost.cloudstream3`
+## Build it yourself
 
-### Manually
+This repo is a fork of [recloudstream/TestPlugins](https://github.com/recloudstream/TestPlugins). Every push to `master` builds the plugins automatically with GitHub Actions and publishes them to the `builds` branch.
 
-1. **Open Settings**: Go to your device’s Settings menu.
+To build locally you need JDK 17 and the Android SDK, then run:
 
-2. **Navigate to Special Access**:
-   - Tap on "Apps & notifications" or "Apps".
-   - Select "Special app access" or "Special access".
+```
+./gradlew YoutubeProvider:make
+```
 
-3. **Select All Files Access**:
-   - Tap on "All files access".
-   - It may be under the three vertical dots menu towards the top of the screen.
-
-4. **Grant Access to the App**: Find the app in the list and tap on it to toggle it, if it is not already enabled.
-
-6. **Restart the App**: Close and reopen the app to apply the changes.
-
+On Windows, use `.\gradlew.bat YoutubeProvider:make`.
 
 ## License
 
-Everything in this repo is released into the public domain. You may use it however you want with no conditions whatsoever
-
-
-## Attribution
-
-This template as well as the gradle plugin and the whole plugin system is **heavily** based on [Aliucord](https://github.com/Aliucord).
-*Go use it, it's a great mobile discord client mod!*
+Everything from the original template is released into the public domain.
