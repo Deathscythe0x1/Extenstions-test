@@ -11,8 +11,14 @@ class YoutubeProvider : MainAPI() {
     override var lang = "en"
     override val hasMainPage = false
 
-    // Public Piped servers come and go. If search stops working, change this address.
-    private val api = "https://pipedapi.kavin.rocks"
+    // Tried in order. The first one that answers is used.
+    private val apis = listOf(
+        "https://pipedapi.leptons.xyz",
+        "https://pipedapi.nosebs.ru",
+        "https://pipedapi.adminforge.de",
+        "https://api.piped.private.coffee",
+        "https://pipedapi.kavin.rocks"
+    )
 
     data class PipedSearch(val items: List<PipedItem>? = null)
     data class PipedItem(
@@ -26,9 +32,22 @@ class YoutubeProvider : MainAPI() {
         val thumbnailUrl: String? = null
     )
 
+    private suspend fun <T> firstWorking(block: suspend (String) -> T): T? {
+        for (api in apis) {
+            try {
+                return block(api)
+            } catch (e: Exception) {
+                // this server failed, try the next one
+            }
+        }
+        return null
+    }
+
     override suspend fun search(query: String): List<SearchResponse> {
         val q = URLEncoder.encode(query, "UTF-8")
-        val res = app.get("$api/search?q=$q&filter=videos").parsed<PipedSearch>()
+        val res = firstWorking { api ->
+            app.get("$api/search?q=$q&filter=videos").parsed<PipedSearch>()
+        } ?: return emptyList()
         return res.items.orEmpty().mapNotNull { item ->
             val id = item.url?.substringAfter("v=", "") ?: return@mapNotNull null
             if (id.isBlank()) return@mapNotNull null
@@ -42,10 +61,12 @@ class YoutubeProvider : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse {
         val id = url.substringAfter("v=")
-        val v = app.get("$api/streams/$id").parsed<PipedStream>()
-        return newMovieLoadResponse(v.title ?: "Untitled", url, TvType.Others, url) {
-            posterUrl = v.thumbnailUrl
-            plot = v.description
+        val v = firstWorking { api ->
+            app.get("$api/streams/$id").parsed<PipedStream>()
+        }
+        return newMovieLoadResponse(v?.title ?: "Untitled", url, TvType.Others, url) {
+            posterUrl = v?.thumbnailUrl
+            plot = v?.description
         }
     }
 
