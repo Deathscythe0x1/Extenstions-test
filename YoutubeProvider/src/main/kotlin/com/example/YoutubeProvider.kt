@@ -46,7 +46,7 @@ class YoutubeProvider : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? {
         val items = firstWorking { api ->
-            app.get("$api/trending?region=US").parsed<List<PipedItem>>()
+            app.get("$api/trending?region=US").parsed<Array<PipedItem>>()
         } ?: return null
         val list = items.mapNotNull { item ->
             val id = item.url?.substringAfter("v=", "") ?: return@mapNotNull null
