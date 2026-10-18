@@ -22,6 +22,11 @@ class YoutubeProvider : MainAPI() {
     )
 
     data class PipedSearch(val items: List<PipedItem>? = null)
+    data class OEmbed(
+        val title: String? = null,
+        val author_name: String? = null,
+        val thumbnail_url: String? = null
+    )
     data class PipedItem(
         val url: String? = null,
         val title: String? = null,
@@ -77,13 +82,16 @@ class YoutubeProvider : MainAPI() {
     }
 
     override suspend fun load(url: String): LoadResponse {
-        val id = url.substringAfter("v=")
-        val v = firstWorking { api ->
-            app.get("$api/streams/$id").parsed<PipedStream>()
+        val id = url.substringAfter("v=").substringBefore("&")
+        val watch = URLEncoder.encode("https://www.youtube.com/watch?v=$id", "UTF-8")
+        val info = try {
+            app.get("https://www.youtube.com/oembed?url=$watch&format=json").parsed<OEmbed>()
+        } catch (e: Exception) {
+            null
         }
-        return newMovieLoadResponse(v?.title ?: "Untitled", url, TvType.Others, url) {
-            posterUrl = v?.thumbnailUrl
-            plot = v?.description
+        return newMovieLoadResponse(info?.title ?: "YouTube video", url, TvType.Others, url) {
+            posterUrl = info?.thumbnail_url ?: "https://i.ytimg.com/vi/$id/hqdefault.jpg"
+            plot = info?.author_name?.let { "By $it" }
         }
     }
 
