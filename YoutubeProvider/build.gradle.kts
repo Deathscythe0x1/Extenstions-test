@@ -4,7 +4,7 @@ dependencies {
 }
 
 // Use an integer for version numbers
-version = 2
+version = 3
 
 cloudstream {
     // All of these properties are optional, you can safely remove any of them.
@@ -27,8 +27,7 @@ cloudstream {
     language = "en"
 
     // Random CC logo I found
-    iconUrl = "https://upload.wikimedia.org/wikipedia/commons/2/2f/Korduene_Logo.png"
-}
+    iconUrl = "https://www.google.com/s2/favicons?domain=youtube.com&sz=128"}
 
 android {
     buildFeatures {
