@@ -9,8 +9,9 @@ class YoutubeProvider : MainAPI() {
     override var name = "YouTube"
     override val supportedTypes = setOf(TvType.Others)
     override var lang = "en"
-    override val hasMainPage = false
-
+    override val hasMainPage = true
+    override val mainPage = mainPageOf("trending" to "Trending")
+    
     // Tried in order. The first one that answers is used.
     private val apis = listOf(
         "https://pipedapi.leptons.xyz",
@@ -41,6 +42,22 @@ class YoutubeProvider : MainAPI() {
             }
         }
         return null
+    }
+
+    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? {
+        val items = firstWorking { api ->
+            app.get("$api/trending?region=US").parsed<List<PipedItem>>()
+        } ?: return null
+        val list = items.mapNotNull { item ->
+            val id = item.url?.substringAfter("v=", "") ?: return@mapNotNull null
+            if (id.isBlank()) return@mapNotNull null
+            newMovieSearchResponse(
+                item.title ?: "Untitled",
+                "$mainUrl/watch?v=$id",
+                TvType.Others
+            ) { posterUrl = item.thumbnail }
+        }
+        return newHomePageResponse(request.name, list, false)
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
