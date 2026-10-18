@@ -1,0 +1,8 @@
+{
+  "name": "DeathScythe0x1",
+  "description": "My CloudStream plugins",
+  "manifestVersion": 1,
+  "pluginLists": [
+    "https://raw.githubusercontent.com/Deathscythe0x1/Extenstions-test/builds/plugins.json"
+  ]
+}
