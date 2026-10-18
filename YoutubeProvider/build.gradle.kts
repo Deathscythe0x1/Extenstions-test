@@ -21,7 +21,7 @@ cloudstream {
     **/
     status = 1 // Will be 3 if unspecified
 
-    tvTypes = listOf("Others")
+    tvTypes = listOf("Movies","Anime","TV Series","Drama")
 
     requiresResources = true
     language = "en"
