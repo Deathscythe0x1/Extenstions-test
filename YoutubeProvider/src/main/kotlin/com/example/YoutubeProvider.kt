@@ -10,8 +10,57 @@ class YoutubeProvider : MainAPI() {
     override val supportedTypes = setOf(TvType.Others)
     override var lang = "en"
     override val hasMainPage = true
-    override val mainPage = mainPageOf("trending" to "Trending")
-    
+
+    // Your country. Change this one line (IN, US, GB). Must match a key below for local rows.
+    private val region = "IN"
+
+    // Each pair is: what to search (or "trending") to row title
+    private val rowsByRegion: Map<String, List<Pair<String, String>>> = mapOf(
+        "IN" to listOf(
+            "trending" to "Trending in India",
+            "latest hindi songs" to "Hindi songs",
+            "punjabi songs" to "Punjabi songs",
+            "bollywood trailers" to "Bollywood trailers",
+            "movie trailers" to "Movie trailers",
+            "south indian movie trailers" to "South Indian trailers",
+            "cricket highlights" to "Cricket",
+            "ipl highlights" to "IPL",
+            "hindi news live" to "India news",
+            "hindi comedy" to "Comedy",
+            "indian street food" to "Street food",
+            "tech reviews" to "Tech",
+            "cooking recipes" to "Cooking"
+            "hindi tech review" to "Tech in Hindi",
+            "hindi gaming" to "Gaming in Hindi",
+            "devotional songs" to "Devotional"
+        ),
+        "US" to listOf(
+            "trending" to "Trending in the US",
+            "music videos" to "Music",
+            "gaming" to "Gaming",
+            "latest news" to "News",
+            "movie trailers" to "Movie trailers",
+            "stand up comedy" to "Comedy",
+            "nfl highlights" to "NFL",
+            "tech reviews" to "Tech",
+            "cooking recipes" to "Cooking"
+        ),
+        "GB" to listOf(
+            "trending" to "Trending in the UK",
+            "uk music" to "Music",
+            "uk news" to "News",
+            "premier league highlights" to "Premier League",
+            "british comedy" to "Comedy",
+            "movie trailers" to "Movie trailers",
+            "tech reviews" to "Tech",
+            "baking recipes" to "Baking"
+        )
+    )
+
+    override val mainPage = mainPageOf(
+        *(rowsByRegion[region] ?: rowsByRegion.getValue("US")).toTypedArray()
+    )
+
     // Tried in order. The first one that answers is used.
     private val apis = listOf(
         "https://pipedapi.leptons.xyz",
@@ -32,11 +81,6 @@ class YoutubeProvider : MainAPI() {
         val title: String? = null,
         val thumbnail: String? = null
     )
-    data class PipedStream(
-        val title: String? = null,
-        val description: String? = null,
-        val thumbnailUrl: String? = null
-    )
 
     private suspend fun <T> firstWorking(block: suspend (String) -> T): T? {
         for (api in apis) {
@@ -49,20 +93,31 @@ class YoutubeProvider : MainAPI() {
         return null
     }
 
-    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? {
-        val items = firstWorking { api ->
-            app.get("$api/trending?region=US").parsed<Array<PipedItem>>()
-        } ?: return null
-        val list = items.mapNotNull { item ->
+    private fun toResults(items: List<PipedItem>): List<SearchResponse> {
+        return items.mapNotNull { item ->
             val id = item.url?.substringAfter("v=", "") ?: return@mapNotNull null
             if (id.isBlank()) return@mapNotNull null
             newMovieSearchResponse(
                 item.title ?: "Untitled",
                 "$mainUrl/watch?v=$id",
                 TvType.Others
-            ) { posterUrl = item.thumbnail }
+            ) { posterUrl = "https://i.ytimg.com/vi/$id/hqdefault.jpg" }
         }
-        return newHomePageResponse(request.name, list, false)
+    }
+
+    override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse? {
+        val result: List<PipedItem>? = if (request.data == "trending") {
+            firstWorking { api ->
+                app.get("$api/trending?region=$region").parsed<Array<PipedItem>>().toList()
+            }
+        } else {
+            val q = URLEncoder.encode(request.data, "UTF-8")
+            firstWorking { api ->
+                app.get("$api/search?q=$q&filter=videos").parsed<PipedSearch>().items
+            }
+        }
+        val items = result ?: return null
+        return newHomePageResponse(request.name, toResults(items), false)
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
@@ -70,15 +125,7 @@ class YoutubeProvider : MainAPI() {
         val res = firstWorking { api ->
             app.get("$api/search?q=$q&filter=videos").parsed<PipedSearch>()
         } ?: return emptyList()
-        return res.items.orEmpty().mapNotNull { item ->
-            val id = item.url?.substringAfter("v=", "") ?: return@mapNotNull null
-            if (id.isBlank()) return@mapNotNull null
-            newMovieSearchResponse(
-                item.title ?: "Untitled",
-                "$mainUrl/watch?v=$id",
-                TvType.Others
-            ) { posterUrl = item.thumbnail }
-        }
+        return toResults(res.items.orEmpty())
     }
 
     override suspend fun load(url: String): LoadResponse {
