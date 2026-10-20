@@ -29,7 +29,7 @@ class YoutubeProvider : MainAPI() {
             "hindi comedy" to "Comedy",
             "indian street food" to "Street food",
             "tech reviews" to "Tech",
-            "cooking recipes" to "Cooking"
+            "cooking recipes" to "Cooking",
             "hindi tech review" to "Tech in Hindi",
             "hindi gaming" to "Gaming in Hindi",
             "devotional songs" to "Devotional"
